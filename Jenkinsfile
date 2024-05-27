@@ -1,41 +1,41 @@
 pipeline {
-  environment {
-    registry = "johnclintonm/devops-oo"
-    registryCredential = 'docker-hub-credentials'
-    dockerImage = ''
-  }
-  agent any
-  stages {
-    stage('Cloning Git') {
-      steps {
-        git 'https://github.com/johnclinton14497/devops-cicd-demo.git'
-      }
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     }
-    stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build registry + ":$BUILD_NUMBER"
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git 'https://github.com/johnclinton14497/devops-cicd-demo.git'
+            }
         }
-      }
-    }
-    stage('Push Image') {
-      steps{
-        script {
-          /* Finally, we'll push the image with two tags:
-                   * First, the incremental build number from Jenkins
-                   * Second, the 'latest' tag.
-                   * Pushing multiple tags is cheap, as all the layers are reused. */
-          docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-              dockerImage.push("${env.BUILD_NUMBER}")
-              dockerImage.push("latest")
-          }
+        stage('Building image') {
+            steps {
+                script {
+                    sh 'docker build -t johnclintonm/devops-oo:12 .'
+                }
+            }
         }
-      }
+        stage('Push Image') {
+            steps {
+                script {
+                    docker.withRegistry('', 'dockerhub') {
+                        sh 'docker push johnclintonm/devops-oo:12'
+                    }
+                }
+            }
+        }
+        stage('Deploy to K8S') {
+            steps {
+                script {
+                    // Deployment steps to Kubernetes
+                }
+            }
+        }
     }
-    stage('Deploy to K8S'){
-        steps{
-            sh 'kubectl apply -f deployment.yml'
-       }
+    post {
+        always {
+            cleanWs()
+        }
     }
-  }
 }
