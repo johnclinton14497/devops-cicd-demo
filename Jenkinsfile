@@ -28,16 +28,5 @@ pipeline {
         }
       }
     }
-    stage('Deploy to K8S') {
-      steps {
-        sh 'kubectl apply -f deployment.yml'
-      }
-    }
-  }
-  post {
-    always {
-      cleanWs()
-    }
   }
 }
-
