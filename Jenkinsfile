@@ -8,7 +8,7 @@ pipeline {
   stages {
     stage('Cloning Git') {
       steps {
-        git ''
+        git 'https://github.com/johnclinton14497/devops-cicd-demo.git'
       }
     }
     stage('Building image') {
