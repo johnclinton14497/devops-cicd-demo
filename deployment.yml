@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: demo-app
-        image: interviewdot/demo-k8s:0.2.0
+        image: johnclintonm/devops-oo:0.2.0
         ports:
         - containerPort: 8081
 ---
