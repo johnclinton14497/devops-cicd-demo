@@ -1,41 +1,43 @@
 pipeline {
-    agent any
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+  environment {
+    registry = "interviewdot/cicd-demo"
+    registryCredential = 'docker-hub-credentials'
+    dockerImage = ''
+  }
+  agent any
+  stages {
+    stage('Cloning Git') {
+      steps {
+        git ''
+      }
     }
-    stages {
-        stage('Cloning Git') {
-            steps {
-                git 'https://github.com/johnclinton14497/devops-cicd-demo.git'
-            }
+    stage('Building image') {
+      steps {
+        script {
+          dockerImage = docker.build("${registry}:${env.BUILD_NUMBER}")
         }
-        stage('Building image') {
-            steps {
-                script {
-                    sh 'docker build -t johnclintonm/devops-oo:12 .'
-                }
-            }
-        }
-        stage('Push Image') {
-            steps {
-                script {
-                    docker.withRegistry('', 'dockerhub') {
-                        sh 'docker push johnclintonm/devops-oo:12'
-                    }
-                }
-            }
-        }
-        stage('Deploy to K8S') {
-            steps {
-                script {
-                    // Deployment steps to Kubernetes
-                }
-            }
-        }
+      }
     }
-    post {
-        always {
-            cleanWs()
+    stage('Push Image') {
+      steps {
+        script {
+          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+            dockerImage.push("${env.BUILD_NUMBER}")
+            dockerImage.push("latest")
+          }
         }
+      }
     }
+    stage('Deploy to K8S') {
+      steps {
+        sh 'kubectl apply -f deployment.yml'
+      }
+    }
+  }
+  post {
+    always {
+      cleanWs()
+    }
+  }
 }
+
